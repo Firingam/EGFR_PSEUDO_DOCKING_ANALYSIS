@@ -1,0 +1,57 @@
+# 1. Load AlphaFold EGFR model (UniProt P00533) → model #1
+open https://alphafold.ebi.ac.uk/files/AF-P00533-F1-model_v4.pdb
+
+# 2. Load EGFR crystal structure with gefitinib (PDB: 4WKQ) → model #2
+open 4wkq
+
+# 3. Align the experimental structure (#2) onto the AlphaFold model (#1)
+matchmaker #2 to #1
+
+# 4. Extract the gefitinib ligand (IRE) into its own model → #3
+split #2 ligand
+
+# 5. Close the now-redundant crystal model (#2)
+close #2
+
+# 6. Style the AlphaFold model (#1)
+cartoon style #1 width 2 thickness 1
+color bfactor #1 palette alphafold
+
+# 7. Style the ligand model (#3)
+style #3 stick
+color #3 yellow target a
+
+# 8. Highlight binding-site residues on #1
+surface #1:745,751,793,796
+color #1:745,751,793,796 hot pink target s
+
+# 9. Label those residues
+label #1:745 text "%r" size 20 color black
+label #1:751 text "%r" size 20 color black
+label #1:793 text "%r" size 20 color black
+label #1:796 text "%r" size 20 color black
+
+# 10. Final tweaks
+lighting soft
+set bgColor white
+
+# --- EXPORTS (robust) ---
+
+# Ensure ligand selection (Gefitinib = IRE in 4WKQ)
+select :IRE & #2
+
+# Reduce model #2 to the ligand only (delete everything NOT selected)
+delete ~sel & #2
+
+# 1) Save the ligand alone (now #2 contains only IRE)
+save "C:/Users/Andrea/Desktop/ligand.pdb" models #2 format pdb
+
+# 2) Merge AF model (#1) + ligand-only model (#2) into a NEW model (#3)
+combine #1 #2 name AF_with_IRE close false
+
+# Save the merged model (#3) → AlphaFold + ligand (no extra 4WKQ atoms)
+save "C:/Users/Andrea/Desktop/EGFR_AF3_gefitinib.pdb" models #3 format pdb
+
+# Now you can close the original sources if you want a clean session
+close #1
+close #2
